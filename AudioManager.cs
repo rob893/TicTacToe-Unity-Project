@@ -5,6 +5,9 @@ using UnityEngine;
 [RequireComponent(typeof(AudioSource))]
 public class AudioManager : MonoBehaviour
 {
+	/*
+	 * The AudioManager handles all audio not associated with a specific object.
+	 */
 
 	//Singleton Pattern
 	public static AudioManager Instance;
@@ -49,6 +52,9 @@ public class AudioManager : MonoBehaviour
 		StartCoroutine(StartInitialSounds());
 	}
 
+	/// <summary>
+	/// Change the sounds to default sounds.
+	/// </summary>
 	public void ChangeZoneSoundsToDefault()
 	{
 		if (musicAudioSource.clip != defaultMusic)
@@ -57,6 +63,10 @@ public class AudioManager : MonoBehaviour
 		}
 	}
 
+	/// <summary>
+	/// Change the music.
+	/// </summary>
+	/// <param name="newMusic">New music.</param>
 	public void ChangeEnvironmentMusic(AudioClip newMusic)
 	{
 		if (musicAudioSource.clip != newMusic)
@@ -66,6 +76,10 @@ public class AudioManager : MonoBehaviour
 		}
 	}
 
+	/// <summary>
+	/// Stops the music, plays the clip, then resumes the music where it left off.
+	/// </summary>
+	/// <param name="music">The clip to be played.</param>
 	public void PausePlayOneShotResumeMusic(AudioClip music)
 	{
 		if (music == musicAudioSource.clip)
@@ -76,6 +90,11 @@ public class AudioManager : MonoBehaviour
 		StartCoroutine(PausePlayOneShotResume(musicAudioSource, music, maxMusicVolume));
 	}
 
+	/// <summary>
+	/// Play a sound effect.
+	/// </summary>
+	/// <param name="clip">The sound effect.</param>
+	/// <param name="oneShot">True if it is a one shot, false if not.</param>
 	public void PlaySoundEffect(AudioClip clip, bool oneShot = false)
 	{
 		if (oneShot)
@@ -93,6 +112,10 @@ public class AudioManager : MonoBehaviour
 		soundEffectSource.Play();
 	}
 
+	/// <summary>
+	/// Starts the initial sounds.
+	/// </summary>
+	/// <returns>IEnumerator</returns>
 	private IEnumerator StartInitialSounds()
 	{
 		if(musicAudioSource.clip != defaultMusic)
@@ -110,6 +133,9 @@ public class AudioManager : MonoBehaviour
 		soundEffectSource.mute = false;
 	}
 
+	/// <summary>
+	/// Coroutine for PlayOneShotResumeMusic().
+	/// </summary>
 	private IEnumerator PausePlayOneShotResume(AudioSource source, AudioClip clip, float maxVol)
 	{
 		AudioClip oldClip = source.clip;
@@ -129,6 +155,9 @@ public class AudioManager : MonoBehaviour
 		StartCoroutine(FadeIn(source, maxVol));
 	}
 
+	/// <summary>
+	/// Coroutine for swapping clips.
+	/// </summary>
 	private IEnumerator SwapClip(AudioSource source, AudioClip newClip, float maxVol)
 	{
 
@@ -146,6 +175,11 @@ public class AudioManager : MonoBehaviour
 		StartCoroutine(FadeIn(source, maxVol));
 	}
 
+	/// <summary>
+	/// Fade the audiosource in.
+	/// </summary>
+	/// <param name="source">The audiosource to fade in.</param>
+	/// <param name="maxVol">The max volume to fade the source into.</param>
 	private IEnumerator FadeIn(AudioSource source, float maxVol)
 	{
 		int i = 0;
@@ -158,6 +192,10 @@ public class AudioManager : MonoBehaviour
 		source.volume = maxVol;
 	}
 
+	/// <summary>
+	/// Fade the audiosource out to 0.
+	/// </summary>
+	/// <param name="source">The source to fade out.</param>
 	private IEnumerator FadeOut(AudioSource source)
 	{
 		int i = 0;

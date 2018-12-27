@@ -4,26 +4,35 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour {
+	/*
+	 * The GameManager class sets up new games and enforces the game's rules.
+	 */
 
+	//Singleton
 	public static GameManager Instance;
 
 	public delegate void OnTurnComplete();
 	public OnTurnComplete onTurnCompleteCallback;
 
 	[SerializeField] private Transform gameBoard;
-	[SerializeField] private GameObject gridCellPrefab;
-	[SerializeField] private int numCellsPerRow = 3;
+	[SerializeField] private GameObject gridCellPrefab; 
 	[SerializeField] private AudioClip gameOverSound;
 
+	private int numCellsPerRow = 3;
 	private List<GridCell> gridCells = new List<GridCell>();
 	private int[,] boardMatrix;
 	private int turnCount = 1;
 	private Dictionary<int, PlayerMove> moveHistory = new Dictionary<int, PlayerMove>();
 	private string winMessage = "";
 
-
+	/// <summary>
+	/// Private constructor to enforce singleton.
+	/// </summary>
 	private GameManager() { }
 
+	/// <summary>
+	/// Enforce the singleton.
+	/// </summary>
 	private void Awake()
 	{
 		if(Instance == null)
@@ -36,16 +45,28 @@ public class GameManager : MonoBehaviour {
 		}
 	}
 
+	/// <summary>
+	/// Get the player who is currently making a move.
+	/// </summary>
+	/// <returns>The player number. Either 1 or 2.</returns>
 	public int GetPlayerNumber()
 	{
 		return ((turnCount + 1) % 2) + 1;
 	}
 
+	/// <summary>
+	/// Set the number of cells per row. Only useful right before creating a new game board.
+	/// </summary>
+	/// <param name="num">The number of cells per row (and also per column).</param>
 	public void SetNumCellsPerRow(int num)
 	{
 		numCellsPerRow = num;
 	}
 
+	/// <summary>
+	/// Creates a new game board.
+	/// </summary>
+	/// <param name="numCellsToWin">The number of cells per row (and also per column). Example: 3 will create a 3x3 board. 10 will create a 10x10 board.</param>
 	private void CreateGameBoard(int numCellsToWin)
 	{
 		GridLayoutGroup layout = gameBoard.GetComponent<GridLayoutGroup>();
@@ -58,7 +79,7 @@ public class GameManager : MonoBehaviour {
 		{
 			for(int j = 0; j < boardMatrix.GetLength(1); j++)
 			{
-				Vector2 position = new Vector2(i, j);
+				GridPosition position = new GridPosition(i, j);
 				GameObject newCell = Instantiate(gridCellPrefab, gameBoard);
 				GridCell newCellGridCell = newCell.GetComponent<GridCell>();
 				newCellGridCell.SetPosition(position);
@@ -67,14 +88,18 @@ public class GameManager : MonoBehaviour {
 		}
 	}
 
+	/// <summary>
+	/// Ends the turn.
+	/// </summary>
+	/// <param name="cell">The GridCell that was just played.</param>
 	public void EndTurn(GridCell cell)
 	{
-		boardMatrix[(int)cell.GetPosition().x, (int)cell.GetPosition().y] = GetPlayerNumber();
+		boardMatrix[cell.GetPosition().row, cell.GetPosition().column] = GetPlayerNumber();
 
 		PlayerMove newMove = new PlayerMove(turnCount, GetPlayerNumber(), cell.GetPosition());
 		moveHistory.Add(turnCount, newMove);
 
-		if(CheckForWinner())
+		if(CheckForWinner(cell))
 		{
 			GameOver();
 		}
@@ -89,21 +114,28 @@ public class GameManager : MonoBehaviour {
 		}
 	}
 
-	private bool CheckForWinner()
+	/// <summary>
+	/// Check the win/draw conditions of the game.
+	/// </summary>
+	/// <param name="cell">The GridCell that was just played.</param>
+	/// <returns>True if the game is won or if it is a draw, false if otherwise.</returns>
+	private bool CheckForWinner(GridCell cell)
 	{
-		for(int i = 0; i < boardMatrix.GetLength(0); i++) //We can assume that the number of columns is equal to the number of rows. Check all here instead of a loop for both.
+		if(turnCount < (numCellsPerRow * 2) - 1) //It is impossible to win if there has not been enough turns. No point in wasting time checking.
 		{
-			if(CheckWinRow(i))
-			{
-				winMessage = "Player " + GetPlayerNumber() + " has won!";
-				return true;
-			}
+			return false;
+		}
 
-			if (CheckWinCol(i))
-			{
-				winMessage = "Player " + GetPlayerNumber() + " has won!";
-				return true;
-			}
+		if(CheckWinRow(cell.GetPosition().row))
+		{
+			winMessage = "Player " + GetPlayerNumber() + " has won!";
+			return true;
+		}
+
+		if (CheckWinCol(cell.GetPosition().column))
+		{
+			winMessage = "Player " + GetPlayerNumber() + " has won!";
+			return true;
 		}
 
 		if(CheckWinDiagLeft())
@@ -127,6 +159,11 @@ public class GameManager : MonoBehaviour {
 		return false;
 	}
 
+	/// <summary>
+	/// Check if the passed in row number is a win.
+	/// </summary>
+	/// <param name="rowNum">The row number to check for a win.</param>
+	/// <returns>True if there is a win, false otherwise.</returns>
 	private bool CheckWinRow(int rowNum)
 	{
 		if(rowNum >= boardMatrix.GetLength(0) || rowNum < 0)
@@ -135,9 +172,11 @@ public class GameManager : MonoBehaviour {
 			return false;
 		}
 
-		for(int i = 0; i < boardMatrix.GetLength(1) - 1; i++)
+		int playerNumber = GetPlayerNumber();
+
+		for(int i = 0; i < boardMatrix.GetLength(0); i++)
 		{
-			if(boardMatrix[rowNum, i] != boardMatrix[rowNum, i + 1] || boardMatrix[rowNum, i] == 0)
+			if(boardMatrix[rowNum, i] != playerNumber)
 			{
 				return false;
 			}
@@ -146,6 +185,11 @@ public class GameManager : MonoBehaviour {
 		return true;
 	}
 
+	/// <summary>
+	/// Check if the passed in column number is a win.
+	/// </summary>
+	/// <param name="colNum">The column number to check for a win.</param>
+	/// <returns>True if there is a win, false otherwise.</returns>
 	private bool CheckWinCol(int colNum)
 	{
 		if (colNum >= boardMatrix.GetLength(1) || colNum < 0)
@@ -154,9 +198,11 @@ public class GameManager : MonoBehaviour {
 			return false;
 		}
 
-		for (int i = 0; i < boardMatrix.GetLength(0) - 1; i++)
+		int playerNumber = GetPlayerNumber();
+
+		for (int i = 0; i < boardMatrix.GetLength(1); i++)
 		{
-			if (boardMatrix[i, colNum] != boardMatrix[i + 1, colNum] || boardMatrix[i, colNum] == 0)
+			if (boardMatrix[i, colNum] != playerNumber)
 			{
 				return false;
 			}
@@ -165,48 +211,62 @@ public class GameManager : MonoBehaviour {
 		return true;
 	}
 
+	/// <summary>
+	/// Check if the left diagnal (top left to bottom right) is a win.
+	/// </summary>
+	/// <returns>True if there is a win, false otherwise.</returns>
 	private bool CheckWinDiagLeft()
 	{
-		for(int i = 0; i < boardMatrix.GetLength(0) - 1; i++)
-		{
-			if (boardMatrix[i, i] != boardMatrix[i + 1, i + 1] || boardMatrix[i, i] == 0)
-			{
-				return false;
-			}
-		}
+		int playerNumber = GetPlayerNumber();
 
-		return true;
-	}
-
-	private bool CheckWinDiagRight()
-	{
-		for (int i = boardMatrix.GetLength(0) - 1, j = 0; i > 0; i--, j++)
-		{
-			if (boardMatrix[j, i] != boardMatrix[j + 1, i - 1] || boardMatrix[j, i] == 0)
-			{
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-	private bool CheckForDraw()
-	{
 		for(int i = 0; i < boardMatrix.GetLength(0); i++)
 		{
-			for(int j = 0; j < boardMatrix.GetLength(1); j++)
+			if (boardMatrix[i, i] != playerNumber)
 			{
-				if(boardMatrix[i, j] == 0)
-				{
-					return false;
-				}
+				return false;
 			}
 		}
 
 		return true;
 	}
 
+	/// <summary>
+	/// Check if the right diagnal (top right to bottom left) is a win.
+	/// </summary>
+	/// <returns>True if there is a win, false otherwise.</returns>
+	private bool CheckWinDiagRight()
+	{
+		int playerNumber = GetPlayerNumber();
+
+		for (int i = boardMatrix.GetLength(0) - 1, j = 0; i >= 0; i--, j++)
+		{
+			if (boardMatrix[j, i] != playerNumber)
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/// <summary>
+	/// Check if the game is a draw.
+	/// </summary>
+	/// <returns>True if there is a draw, false otherwise.</returns>
+	private bool CheckForDraw()
+	{
+		//A draw is checked after every win condition. Instead of going through the entire matrix to see if there are any moves left, we can simply check the turn count against the number of possible moves.
+		if (turnCount < numCellsPerRow * numCellsPerRow)
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	/// <summary>
+	/// End the game.
+	/// </summary>
 	private void GameOver()
 	{
 		AudioManager.Instance.PlaySoundEffect(gameOverSound, true);
@@ -219,6 +279,9 @@ public class GameManager : MonoBehaviour {
 		UIManager.Instance.ShowGameOverPanel(winMessage);
 	}
 
+	/// <summary>
+	/// Reset the game to their initial values and build a new gameboard.
+	/// </summary>
 	public void ResetGame()
 	{
 		turnCount = 1;
@@ -240,6 +303,9 @@ public class GameManager : MonoBehaviour {
 		CreateGameBoard(numCellsPerRow);
 	}
 
+	/// <summary>
+	/// Print all of the values in the gameboard matrix to the console.
+	/// </summary>
 	private void PrintGameMatrix()
 	{
 		if(boardMatrix == null)
@@ -256,6 +322,9 @@ public class GameManager : MonoBehaviour {
 		}
 	}
 
+	/// <summary>
+	/// Print the move history of the current game to the console.
+	/// </summary>
 	public void PrintMoveHistory()
 	{
 		foreach(KeyValuePair<int, PlayerMove> move in moveHistory)
