@@ -11,6 +11,7 @@ public class UIManager : MonoBehaviour {
 	[SerializeField] private GameObject gameOverPanel;
 	[SerializeField] private GameObject chooseGameTypePanel;
 	[SerializeField] private Text gameInfoText;
+	[SerializeField] private Text playerTurnText;
 	[SerializeField] private Text gameOverText;
 	[SerializeField] private AudioClip selectSound;
 
@@ -30,9 +31,20 @@ public class UIManager : MonoBehaviour {
 
 		chooseGameTypePanel.SetActive(true);
 		gameInfoText.enabled = false;
+		playerTurnText.enabled = false;
 		pausePanel.SetActive(false);
 		gameOverPanel.SetActive(false);
 		gameOverText.text = "";
+	}
+
+	private void Start()
+	{
+		GameManager.Instance.onTurnCompleteCallback += UpdatePlayerTurnText;
+	}
+
+	public void UpdatePlayerTurnText()
+	{
+		playerTurnText.text = "Turn: player " + GameManager.Instance.GetPlayerNumber(); 
 	}
 
 	public void ShowGameOverPanel(string gameOverText)
@@ -40,6 +52,7 @@ public class UIManager : MonoBehaviour {
 		this.gameOverText.text = gameOverText;
 		gameOverPanel.SetActive(true);
 		gameInfoText.enabled = false;
+		playerTurnText.enabled = false;
 	}
 
 	public void HideGameOverPanel()
@@ -47,6 +60,7 @@ public class UIManager : MonoBehaviour {
 		gameOverText.text = "";
 		gameOverPanel.SetActive(false);
 		gameInfoText.enabled = true;
+		playerTurnText.enabled = true;
 	}
 
 	public void TogglePausePanel()
@@ -54,6 +68,7 @@ public class UIManager : MonoBehaviour {
 		AudioManager.Instance.PlaySoundEffect(selectSound);
 		pausePanel.SetActive(!pausePanel.activeSelf);
 		gameInfoText.enabled = !gameInfoText.enabled;
+		playerTurnText.enabled = !playerTurnText.enabled;
 	}
 
 	public void NewGame()
@@ -70,6 +85,7 @@ public class UIManager : MonoBehaviour {
 		}
 
 		gameInfoText.enabled = false;
+		playerTurnText.enabled = false;
 		chooseGameTypePanel.SetActive(true);
 	}
 
@@ -77,6 +93,7 @@ public class UIManager : MonoBehaviour {
 	{
 		AudioManager.Instance.PlaySoundEffect(selectSound);
 		chooseGameTypePanel.SetActive(false);
+		playerTurnText.enabled = true;
 		gameInfoText.enabled = true;
 		GameManager.Instance.SetNumCellsPerRow(3);
 		GameManager.Instance.ResetGame();
@@ -86,6 +103,7 @@ public class UIManager : MonoBehaviour {
 	{
 		AudioManager.Instance.PlaySoundEffect(selectSound);
 		chooseGameTypePanel.SetActive(false);
+		playerTurnText.enabled = true;
 		gameInfoText.enabled = true;
 		GameManager.Instance.SetNumCellsPerRow(4);
 		GameManager.Instance.ResetGame();

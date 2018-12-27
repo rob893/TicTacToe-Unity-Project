@@ -7,6 +7,9 @@ public class GameManager : MonoBehaviour {
 
 	public static GameManager Instance;
 
+	public delegate void OnTurnComplete();
+	public OnTurnComplete onTurnCompleteCallback;
+
 	[SerializeField] private Transform gameBoard;
 	[SerializeField] private GameObject gridCellPrefab;
 	[SerializeField] private int numCellsPerRow = 3;
@@ -25,7 +28,6 @@ public class GameManager : MonoBehaviour {
 	{
 		if(Instance == null)
 		{
-			DontDestroyOnLoad(gameObject);
 			Instance = this;
 		}
 		else if(Instance != this)
@@ -79,6 +81,11 @@ public class GameManager : MonoBehaviour {
 		else
 		{
 			turnCount++;
+
+			if(onTurnCompleteCallback != null)
+			{
+				onTurnCompleteCallback.Invoke();
+			}
 		}
 	}
 
@@ -224,6 +231,11 @@ public class GameManager : MonoBehaviour {
 		gridCells.Clear();
 		moveHistory.Clear();
 		boardMatrix = null;
+
+		if(onTurnCompleteCallback != null)
+		{
+			onTurnCompleteCallback.Invoke();
+		}
 
 		CreateGameBoard(numCellsPerRow);
 	}
