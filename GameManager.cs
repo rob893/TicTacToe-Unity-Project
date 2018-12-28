@@ -19,11 +19,11 @@ public class GameManager : MonoBehaviour {
 	[SerializeField] private AudioClip gameOverSound;
 
 	private int numCellsPerRow = 3;
-	private List<GridCell> gridCells = new List<GridCell>();
-	private int[,] boardMatrix;
 	private int turnCount = 1;
+	private GridCell[,] boardMatrix;
 	private Dictionary<int, PlayerMove> moveHistory = new Dictionary<int, PlayerMove>();
 	private string winMessage = "";
+
 
 	/// <summary>
 	/// Private constructor to enforce singleton.
@@ -73,7 +73,7 @@ public class GameManager : MonoBehaviour {
 		layout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
 		layout.constraintCount = numCellsToWin;
 
-		boardMatrix = new int[numCellsToWin, numCellsToWin];
+		boardMatrix = new GridCell[numCellsToWin, numCellsToWin];
 
 		for(int i = 0; i < boardMatrix.GetLength(0); i++)
 		{
@@ -83,7 +83,8 @@ public class GameManager : MonoBehaviour {
 				GameObject newCell = Instantiate(gridCellPrefab, gameBoard);
 				GridCell newCellGridCell = newCell.GetComponent<GridCell>();
 				newCellGridCell.SetPosition(position);
-				gridCells.Add(newCellGridCell);
+
+				boardMatrix[i, j] = newCellGridCell;
 			}
 		}
 	}
@@ -94,8 +95,6 @@ public class GameManager : MonoBehaviour {
 	/// <param name="cell">The GridCell that was just played.</param>
 	public void EndTurn(GridCell cell)
 	{
-		boardMatrix[cell.GetPosition().row, cell.GetPosition().column] = GetPlayerNumber();
-
 		PlayerMove newMove = new PlayerMove(turnCount, GetPlayerNumber(), cell.GetPosition());
 		moveHistory.Add(turnCount, newMove);
 
@@ -176,7 +175,7 @@ public class GameManager : MonoBehaviour {
 
 		for(int i = 0; i < boardMatrix.GetLength(0); i++)
 		{
-			if(boardMatrix[rowNum, i] != playerNumber)
+			if(boardMatrix[rowNum, i].GetPlayerWhoUsed() != playerNumber)
 			{
 				return false;
 			}
@@ -202,7 +201,7 @@ public class GameManager : MonoBehaviour {
 
 		for (int i = 0; i < boardMatrix.GetLength(1); i++)
 		{
-			if (boardMatrix[i, colNum] != playerNumber)
+			if (boardMatrix[i, colNum].GetPlayerWhoUsed() != playerNumber)
 			{
 				return false;
 			}
@@ -221,7 +220,7 @@ public class GameManager : MonoBehaviour {
 
 		for(int i = 0; i < boardMatrix.GetLength(0); i++)
 		{
-			if (boardMatrix[i, i] != playerNumber)
+			if (boardMatrix[i, i].GetPlayerWhoUsed() != playerNumber)
 			{
 				return false;
 			}
@@ -240,7 +239,7 @@ public class GameManager : MonoBehaviour {
 
 		for (int i = boardMatrix.GetLength(0) - 1, j = 0; i >= 0; i--, j++)
 		{
-			if (boardMatrix[j, i] != playerNumber)
+			if (boardMatrix[j, i].GetPlayerWhoUsed() != playerNumber)
 			{
 				return false;
 			}
@@ -271,7 +270,7 @@ public class GameManager : MonoBehaviour {
 	{
 		AudioManager.Instance.PlaySoundEffect(gameOverSound, true);
 
-		foreach(GridCell cell in gridCells)
+		foreach(GridCell cell in boardMatrix)
 		{
 			cell.SetInactive();
 		}
@@ -286,12 +285,14 @@ public class GameManager : MonoBehaviour {
 	{
 		turnCount = 1;
 
-		foreach(GridCell cell in gridCells)
+		if(boardMatrix != null)
 		{
-			Destroy(cell.gameObject);
+			foreach (GridCell cell in boardMatrix)
+			{
+				Destroy(cell.gameObject);
+			}
 		}
 
-		gridCells.Clear();
 		moveHistory.Clear();
 		boardMatrix = null;
 

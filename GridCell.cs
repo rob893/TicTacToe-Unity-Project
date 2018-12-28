@@ -12,6 +12,7 @@ public class GridCell : MonoBehaviour {
 	[SerializeField] private AudioClip chooseSound;
 	[SerializeField] private AudioClip errorSound;
 
+	private int playerWhoUsed = 0; //0 indicates not used yet, 1 is player 1, 2 is player 2.
 	private bool isUsed = false;
 	private GridPosition position;
 	private Button button;
@@ -28,6 +29,15 @@ public class GridCell : MonoBehaviour {
 	}
 
 	/// <summary>
+	/// Get the player who used this cell.
+	/// </summary>
+	/// <returns>1 for player 1, 2 for player 2, 0 for no player.</returns>
+	public int GetPlayerWhoUsed()
+	{
+		return playerWhoUsed;
+	}
+
+	/// <summary>
 	/// Called when the cell is clicked on, this method will mark the cell as used, enable the text (either to "X" or "O" depending on the player number), and then call
 	/// GameManager's EndTurn function by passing a reference to itself. This function will play an error noise and return before doing anything if the cell has already been used.
 	/// </summary>
@@ -41,6 +51,7 @@ public class GridCell : MonoBehaviour {
 
 		isUsed = true;
 		text.enabled = true;
+		playerWhoUsed = GameManager.Instance.GetPlayerNumber();
 
 		AudioManager.Instance.PlaySoundEffect(chooseSound, true);
 
