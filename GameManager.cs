@@ -17,12 +17,17 @@ public class GameManager : MonoBehaviour {
 	[SerializeField] private Transform gameBoard;
 	[SerializeField] private GameObject gridCellPrefab; 
 	[SerializeField] private AudioClip gameOverSound;
+	[SerializeField] private Sprite playerOneIcon;
+	[SerializeField] private Sprite playerTwoIcon;
 
 	private int numCellsPerRow = 3;
 	private int turnCount = 1;
+	private int winner = 0;
 	private GridCell[,] boardMatrix;
 	private Dictionary<int, PlayerMove> moveHistory = new Dictionary<int, PlayerMove>();
 	private string winMessage = "";
+	private bool isGameOver = false;
+	private bool draw = false;
 
 
 	/// <summary>
@@ -152,6 +157,7 @@ public class GameManager : MonoBehaviour {
 		if(CheckForDraw())
 		{
 			winMessage = "The game is a draw!";
+			draw = true;
 			return true;
 		}
 
@@ -268,6 +274,9 @@ public class GameManager : MonoBehaviour {
 	/// </summary>
 	private void GameOver()
 	{
+		isGameOver = true;
+		winner = draw ? 0 : GetPlayerNumber();
+
 		AudioManager.Instance.PlaySoundEffect(gameOverSound, true);
 
 		foreach(GridCell cell in boardMatrix)
@@ -284,8 +293,11 @@ public class GameManager : MonoBehaviour {
 	public void ResetGame()
 	{
 		turnCount = 1;
+		isGameOver = false;
+		draw = false;
+		winner = 0;
 
-		if(boardMatrix != null)
+		if (boardMatrix != null)
 		{
 			foreach (GridCell cell in boardMatrix)
 			{
@@ -332,5 +344,40 @@ public class GameManager : MonoBehaviour {
 		{
 			move.Value.PrintData();
 		}
+	}
+
+	public GridCell[,] GetBoardMatrix()
+	{
+		return boardMatrix;
+	}
+
+	public int GetTurnCount()
+	{
+		return turnCount;
+	}
+
+	public bool GetIsGameOver()
+	{
+		return isGameOver;
+	}
+
+	public int GetWinner()
+	{
+		return winner;
+	}
+
+	public Sprite GetPlayerIcon(int playerNum)
+	{
+		return GetPlayerNumber() == 1 ? playerOneIcon : playerTwoIcon;
+	}
+
+	public void SetPlayerOneIcon(Image icon)
+	{
+		playerOneIcon = icon.sprite;
+	}
+
+	public void SetPlayerTwoIcon(Image icon)
+	{
+		playerTwoIcon = icon.sprite;
 	}
 }

@@ -16,10 +16,16 @@ public class UIManager : MonoBehaviour {
 	[SerializeField] private GameObject pausePanel;
 	[SerializeField] private GameObject gameOverPanel;
 	[SerializeField] private GameObject chooseGameTypePanel;
-	[SerializeField] private Text gameInfoText;
+	[SerializeField] private GameObject gameInfoText;
+	[SerializeField] private GameObject choosePlayerIconsPanel;
+	[SerializeField] private GameObject choosePlayerOnePanel;
+	[SerializeField] private GameObject choosePlayerTwoPanel;
 	[SerializeField] private Text playerTurnText;
 	[SerializeField] private Text gameOverText;
 	[SerializeField] private AudioClip selectSound;
+	[SerializeField] private AudioClip errorSound;
+	[SerializeField] private Image playerOneImage;
+	[SerializeField] private Image playerTwoImage;
 
 
 	/// <summary>
@@ -41,12 +47,14 @@ public class UIManager : MonoBehaviour {
 			Destroy(gameObject);
 		}
 
-		chooseGameTypePanel.SetActive(true);
-		gameInfoText.enabled = false;
+		chooseGameTypePanel.SetActive(false);
+		gameInfoText.SetActive(false);
 		playerTurnText.enabled = false;
 		pausePanel.SetActive(false);
 		gameOverPanel.SetActive(false);
 		gameOverText.text = "";
+
+		ShowChooseIconPanel();
 	}
 
 	/// <summary>
@@ -73,7 +81,7 @@ public class UIManager : MonoBehaviour {
 	{
 		this.gameOverText.text = gameOverText;
 		gameOverPanel.SetActive(true);
-		gameInfoText.enabled = false;
+		gameInfoText.SetActive(false);
 		playerTurnText.enabled = false;
 	}
 
@@ -85,7 +93,7 @@ public class UIManager : MonoBehaviour {
 	{
 		gameOverText.text = "";
 		gameOverPanel.SetActive(false);
-		gameInfoText.enabled = true;
+		gameInfoText.SetActive(true);
 		playerTurnText.enabled = true;
 	}
 
@@ -97,7 +105,7 @@ public class UIManager : MonoBehaviour {
 	{
 		AudioManager.Instance.PlaySoundEffect(selectSound);
 		pausePanel.SetActive(!pausePanel.activeSelf);
-		gameInfoText.enabled = !gameInfoText.enabled;
+		gameInfoText.SetActive(!gameInfoText.activeSelf);
 		playerTurnText.enabled = !playerTurnText.enabled;
 	}
 
@@ -118,9 +126,10 @@ public class UIManager : MonoBehaviour {
 			HideGameOverPanel();
 		}
 
-		gameInfoText.enabled = false;
+		gameInfoText.SetActive(false);
 		playerTurnText.enabled = false;
-		chooseGameTypePanel.SetActive(true);
+		chooseGameTypePanel.SetActive(false);
+		ShowChooseIconPanel();
 	}
 
 	/// <summary>
@@ -132,9 +141,47 @@ public class UIManager : MonoBehaviour {
 		AudioManager.Instance.PlaySoundEffect(selectSound);
 		chooseGameTypePanel.SetActive(false);
 		playerTurnText.enabled = true;
-		gameInfoText.enabled = true;
+		gameInfoText.SetActive(true);
 		GameManager.Instance.SetNumCellsPerRow(numCellsToWin);
 		GameManager.Instance.ResetGame();
+	}
+
+	public void ShowChooseIconPanel()
+	{
+		choosePlayerIconsPanel.SetActive(true);
+		choosePlayerOnePanel.SetActive(true);
+		choosePlayerTwoPanel.SetActive(false);
+	}
+
+	public void HideChooseIconPanel()
+	{
+		choosePlayerIconsPanel.SetActive(false);
+		choosePlayerOnePanel.SetActive(false);
+		choosePlayerTwoPanel.SetActive(false);
+	}
+
+	public void ChooseIconPlayerOne(Image image)
+	{
+		AudioManager.Instance.PlaySoundEffect(selectSound);
+		playerOneImage.sprite = image.sprite;
+		GameManager.Instance.SetPlayerOneIcon(image);
+		choosePlayerOnePanel.SetActive(false);
+		choosePlayerTwoPanel.SetActive(true);
+	}
+
+	public void ChooseIconPlayerTwo(Image image)
+	{
+		if(image.sprite == playerOneImage.sprite)
+		{
+			AudioManager.Instance.PlaySoundEffect(errorSound);
+			return;
+		}
+
+		AudioManager.Instance.PlaySoundEffect(selectSound);
+		playerTwoImage.sprite = image.sprite;
+		GameManager.Instance.SetPlayerTwoIcon(image);
+		HideChooseIconPanel();
+		chooseGameTypePanel.SetActive(true);
 	}
 
 	/// <summary>
@@ -154,4 +201,6 @@ public class UIManager : MonoBehaviour {
 		AudioManager.Instance.PlaySoundEffect(selectSound);
 		Application.Quit();
 	}
+
+
 }

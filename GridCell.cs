@@ -11,13 +11,13 @@ public class GridCell : MonoBehaviour {
 
 	[SerializeField] private AudioClip chooseSound;
 	[SerializeField] private AudioClip errorSound;
+	[SerializeField] private Image icon;
 
 	private int playerWhoUsed = 0; //0 indicates not used yet, 1 is player 1, 2 is player 2.
 	private bool isUsed = false;
 	private GridPosition position;
 	private Button button;
-	private Text text;
-
+	
 
 	/// <summary>
 	/// Set initial references.
@@ -25,7 +25,7 @@ public class GridCell : MonoBehaviour {
 	private void Start()
 	{
 		button = GetComponent<Button>();
-		text = GetComponentInChildren<Text>();
+		icon.enabled = false;
 	}
 
 	/// <summary>
@@ -50,12 +50,12 @@ public class GridCell : MonoBehaviour {
 		}
 
 		isUsed = true;
-		text.enabled = true;
+		icon.enabled = true;
 		playerWhoUsed = GameManager.Instance.GetPlayerNumber();
 
 		AudioManager.Instance.PlaySoundEffect(chooseSound, true);
 
-		text.text = GameManager.Instance.GetPlayerNumber() == 1 ? "X" : "O";
+		icon.sprite = GameManager.Instance.GetPlayerIcon(playerWhoUsed);
 		GameManager.Instance.EndTurn(this);
 	}
 
